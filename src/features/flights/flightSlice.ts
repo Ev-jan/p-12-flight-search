@@ -1,39 +1,52 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { SortCriteria, State, Ticket, OptionFilter } from "./interfaces";
 import {
-  filterWithCurrFilters,
-  updateFilterOptions,
+  createEntityAdapter,
+  createSlice,
+  PayloadAction,
+} from "@reduxjs/toolkit";
+import {
+  SortCriteria,
+  State,
+  Ticket,
+  OptionFilter,
+} from "./interfaces";
+
+import {
   updateFilterSelections,
-  sortWithCurrCriteria,
+  updateFilterOptions,
+  sortingFunctions,
 } from "./helpers";
 
-const initialState: State = {
-  originalFlights: [],
-  shownFlights: [],
+const flightsAdapter = createEntityAdapter<Ticket>({
+  selectId: (ticket) => ticket.id,
+});
+
+const initialState: State = flightsAdapter.getInitialState({
   filters: { airline: [], connections: [] },
+  filteredFlights: [] as Ticket[],
   selectedFilters: { airlines: [], connections: [] },
   sortCriteria: SortCriteria.cheapest,
   loading: false,
   error: null,
-};
+});
 
 const flightSlice = createSlice({
   name: "flights",
   initialState: initialState,
   reducers: {
-    setFlights(state, action: PayloadAction<Ticket[]>) {
-      state.originalFlights.push(...action.payload);
-    },
-    setFilterOptions(state: State) {
-      if (state.originalFlights.length === 0) {
+    setFlights: flightsAdapter.upsertMany,
+
+    setFilterOptions: (state) => {
+      if (state.ids.length === 0) {
         return;
       }
+      const tickets = state.ids.map((id) => state.entities[id]) as Ticket[];
       const uniqueAirlines = Array.from(
-        new Set(state.originalFlights.map((ticket) => ticket.airline))
+        new Set(tickets.map((ticket) => ticket && ticket.airline))
       );
       const uniqueConnections = Array.from(
-        new Set(state.originalFlights.map((ticket) => ticket.connections))
-      ).sort((a,b)=> a - b);
+        new Set(tickets.map((ticket) => ticket && ticket.connections))
+      ).sort((a, b) => a - b);
+
       state.filters.airline = updateFilterOptions(
         state.filters.airline,
         uniqueAirlines,
@@ -45,50 +58,70 @@ const flightSlice = createSlice({
         "connections"
       );
     },
-    updateSelectedOptionNames(state: State) {
+    updateSelectedOptionNames: (state) => {
       state.selectedFilters.airlines = state.filters.airline
-      .filter(option => option.selected)
-      .map(option => option["airline"] as string);
+        .filter((option) => option.selected)
+        .map((option) => option.value as string);
 
       state.selectedFilters.connections = state.filters.connections
-      .filter(option => option.selected)
-      .map(
-        (option) => option["connections"] as number
-      );
+        .filter((option) => option.selected)
+        .map((option) => option.value as number);
     },
-    updateFilterSelection(state: State, action: PayloadAction<OptionFilter>) {
+    updateFilterSelection: (state, action: PayloadAction<OptionFilter>) => {
       state.filters = updateFilterSelections(state.filters, action.payload);
     },
-    updateShownFlights(state: State) {
-      state.shownFlights = filterWithCurrFilters(
-        state.filters,
-        state.originalFlights
-      );
-      state.shownFlights = sortWithCurrCriteria(
-        state.shownFlights,
-        state.sortCriteria
-      );
+    filterTickets: (state) => {
+      state.filteredFlights = Object.values(state.entities).filter((ticket) => {
+        return (
+          state.filters.airline.some((optionFilter) => {
+            return (
+              ticket &&
+              optionFilter.airline === ticket.airline &&
+              optionFilter.selected === true
+            );
+          }) &&
+          state.filters.connections.some((optionFilter) => {
+            return (
+              ticket &&
+              optionFilter.connections === ticket.connections &&
+              optionFilter.selected === true
+            );
+          })
+        );
+      }) as Ticket[];
     },
-    sortOptimalFlights(state) {
+    sortOptimalFlights: (state: State) => {
       state.sortCriteria = SortCriteria.optimal;
-      state.shownFlights = sortWithCurrCriteria(
-        state.shownFlights,
-        state.sortCriteria
-      );
+      if (state.ids.length > 0) {
+        state.ids.sort((a, b) =>
+          sortingFunctions[state.sortCriteria](
+            state.entities[a] as Ticket,
+            state.entities[b] as Ticket
+          )
+        );
+      }
     },
-    sortCheapestFlights(state) {
+    sortCheapestFlights: (state: State) => {
       state.sortCriteria = SortCriteria.cheapest;
-      state.shownFlights = sortWithCurrCriteria(
-        state.shownFlights,
-        state.sortCriteria
-      );
+      if (state.ids.length > 0) {
+        state.ids.sort((a, b) =>
+          sortingFunctions[state.sortCriteria](
+            state.entities[a] as Ticket,
+            state.entities[b] as Ticket
+          )
+        );
+      }
     },
-    sortFastestFlights(state) {
+    sortFastestFlights: (state: State) => {
       state.sortCriteria = SortCriteria.fastest;
-      state.shownFlights = sortWithCurrCriteria(
-        state.shownFlights,
-        state.sortCriteria
-      );
+      if (state.ids.length > 0) {
+        state.ids.sort((a, b) =>
+          sortingFunctions[state.sortCriteria](
+            state.entities[a] as Ticket,
+            state.entities[b] as Ticket
+          )
+        );
+      }
     },
   },
 });
@@ -96,12 +129,12 @@ const flightSlice = createSlice({
 export const {
   setFlights,
   setFilterOptions,
+  updateSelectedOptionNames,
   updateFilterSelection,
-  updateShownFlights,
+  filterTickets,
   sortOptimalFlights,
   sortCheapestFlights,
-  sortFastestFlights,
-  updateSelectedOptionNames
+  sortFastestFlights
 } = flightSlice.actions;
 
 export default flightSlice.reducer;

@@ -2,7 +2,6 @@ import styled, { css } from 'styled-components'
 import { CheckMark, CheckMarkRound } from '../assets/icons';
 import { device } from '../theme';
 
-
 const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   border: 0;
   clip: rect(0 0 0 0);
@@ -13,7 +12,8 @@ const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
   padding: 0;
   position: absolute;
   white-space: nowrap;
-  width: 0px;
+  width: 10px;
+  height: 10px;
 `
 const StyledCheckbox = styled.div<{ $checked: boolean; $variant: "round" | "4" }>`
 display: flex;
@@ -65,9 +65,9 @@ type CheckboxProps = {
   onChange: (event: React.FormEvent<HTMLInputElement>) => void
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ variant, checked, ...props }) => (
+const Checkbox: React.FC<CheckboxProps> = ({ variant, checked, id, ...props }) => (
   <CheckboxContainer>
-    <HiddenCheckbox checked={checked} {...props} />
+    <HiddenCheckbox checked={checked} {...props} id={id}/>
     <StyledCheckbox $checked={checked} $variant={variant}>
       {variant === "4" && checked && CheckMark("svg")}
       {variant === "round" && checked && CheckMarkRound("svg")}

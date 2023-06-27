@@ -1,10 +1,9 @@
 import styled from "styled-components";
 import Button from "./button";
-import { useDispatch, useSelector } from 'react-redux'
 import { sortCheapestFlights, sortFastestFlights, sortOptimalFlights } from "../features/flights/flightSlice";
 import { SortCriteria } from "../features/flights/interfaces";
-import { RootState } from './../store';
 import { device } from "../theme";
+import { getCurrentFilter, useAppDispatch, useAppSelector } from "../hooks";
 
 
 
@@ -37,16 +36,16 @@ grid-template-rows: auto;
 `
 const SortBar: React.FC= () => {
 
-    const dispatch = useDispatch();
-    const currentFilter= useSelector((state: RootState) => state.flights.sortCriteria);
+    const dispatch = useAppDispatch();
+    const currentFilter= useAppSelector(getCurrentFilter);
     
     const sortCheapest = () => {
         dispatch(sortCheapestFlights())
       }
-      const sortFastest = () => {
+    const sortFastest = () => {
         dispatch(sortFastestFlights())
       }
-      const sortOptimal = () => {
+    const sortOptimal = () => {
         dispatch(sortOptimalFlights())
       }
 

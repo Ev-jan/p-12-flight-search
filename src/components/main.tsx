@@ -1,14 +1,14 @@
 import styled from "styled-components";
 import FilterMenu from "./filterMenu";
 import SortBar from "./sortbar";
-import { setFilterOptions, setFlights, updateSelectedOptionNames, updateShownFlights } from './../features/flights/flightSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from './../store';
+import { setFilterOptions, setFlights, updateSelectedOptionNames, filterTickets } from './../features/flights/flightSlice';
 import { useEffect, useState } from "react";
 import { useGetFlightsQuery } from "../features/api/apiSlice";
 import { device } from "../theme";
 import FlightCard from "./flightCard";
 import Button from "./button";
+import { getFilteredFlights, useAppDispatch, useAppSelector } from "../hooks";
+import { Ticket } from "../features/flights/interfaces";
 
 
 const StyledMain = styled.main`
@@ -55,27 +55,19 @@ z-index: 1;
 `
 const Main: React.FC = () => {
     const [page, setPage] = useState(1)
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const { data, error, isLoading, refetch } = useGetFlightsQuery(page);
-    const filteredFlights = useSelector((state: RootState) => state.flights.shownFlights);
+    const filteredFlights = useAppSelector(getFilteredFlights) as Ticket[];
 
 
     useEffect(() => {
         if (data) {
             dispatch(setFlights(data));
             dispatch(setFilterOptions());
-            dispatch(updateShownFlights());
+            dispatch(filterTickets());
             dispatch(updateSelectedOptionNames())
         }
     }, [data, dispatch, isLoading, error]);
-
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>Error</div>;
-    }
 
     const handleLoadBtnClick = () => {
         setPage((page) => page + 1)
@@ -90,15 +82,15 @@ const Main: React.FC = () => {
                 <FilterMenu />
             </section>
             <FlightSection>
-                {isLoading ? (<div>Loading...</div>) : (filteredFlights.map((flight) => (
-                    <FlightCard flight={flight} key={flight.id}/>
-                )))}
-                <Button 
-                text="Загрузить ещё билеты"
-                handleClick={handleLoadBtnClick}
-                shape = "all-round-10"
-                disabled={isLoading}
-                active={false}/>
+                {isLoading ? (<div>Loading...</div>) : filteredFlights.length !== 0 ? (filteredFlights.map((flight) => (
+                    <FlightCard flight={flight} key={flight.id} />
+                ))) : (<div style={{margin: "0 auto"}}>Tickets not found</div>)}
+                {filteredFlights.length !== 0 && <Button
+                    text="Загрузить ещё билеты"
+                    handleClick={handleLoadBtnClick}
+                    shape="all-round-10"
+                    disabled={isLoading}
+                    active={false} />}
             </FlightSection>
         </StyledMain>
 

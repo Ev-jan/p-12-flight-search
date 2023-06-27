@@ -1,14 +1,22 @@
+import {  EntityState } from "@reduxjs/toolkit";
+
+
 export interface TicketTime {
     startTime: string;
     endTime: string;
   }
+
+enum Currency {
+  USD = "USD",
+  RUB = "P"
+}
   
 export interface Ticket {
   from: string;
   to: string;
   airline: string;
   price: number;
-  currency: "USD" | "P";
+  currency: Currency;
   startTime: string;
   endTime: string;
   duration: string;
@@ -28,7 +36,7 @@ export type FlightOptions<Ticket> = {
 export type CurrentFlightOptions = Pick<FlightOptions<Ticket>, "airline" | "connections">; 
 
 export interface SortPayload {
-  name: SortCriteria
+  criterion: SortCriteria
 }
 
 export interface WeightedFlight {
@@ -42,14 +50,12 @@ export enum SortCriteria {
   optimal = "optimal",
 }
 
-  export interface State {
-  originalFlights: Ticket[],
-  shownFlights: Ticket[],
-  filters: CurrentFlightOptions,
-  selectedFilters: {airlines: string[], connections: number[]},
-  sortCriteria: SortCriteria,
-  loading: false,
-  error: null,
+export interface State extends EntityState<Ticket> {
+  filters: CurrentFlightOptions;
+  filteredFlights: Ticket[];
+  selectedFilters: { airlines: string[]; connections: number[] };
+  sortCriteria: SortCriteria;
+  loading: boolean;
+  error: null;
 }
 
-  

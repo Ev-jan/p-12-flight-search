@@ -1,12 +1,11 @@
 import { ChevronIcon } from "../assets/icons";
 import { useState } from "react"
 import styled from "styled-components";
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from './../store';
 import Checkbox from "./checkbox";
-import { updateFilterSelection, updateSelectedOptionNames, updateShownFlights } from "../features/flights/flightSlice";
+import { filterTickets, updateFilterSelection, updateSelectedOptionNames } from "../features/flights/flightSlice";
 import { connectionLabel } from "../features/flights/helpers";
 import { device } from "../theme";
+import { getAllAirlines, getAllConnections, getSelectedAirlines, getSelectedConnections, useAppDispatch, useAppSelector } from "../hooks";
 
 const Form = styled.form`
 display: flex;
@@ -51,6 +50,8 @@ padding: 17px;
     font-weight: 500;
     text-align: left;
     color: rgba(133, 138, 227, 1);
+    position: relative;
+    z-index: 2;
 
 }
 &>div {
@@ -117,16 +118,14 @@ z-index: 1;
     & button > span {
         display: none;
   }
-
 `
-
 const FilterMenu: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const [isHidden, setIsHidden] = useState(true);
-    const allAirlines = useSelector((state: RootState) => state.flights.filters.airline);
-    const allConnections = useSelector((state: RootState) => state.flights.filters.connections);
-    const selectedAirlines = useSelector((state: RootState) => state.flights.selectedFilters.airlines);
-    const selectedConnections = useSelector((state: RootState) => state.flights.selectedFilters.connections);
+    const allAirlines = useAppSelector(getAllAirlines);
+    const allConnections = useAppSelector(getAllConnections);
+    const selectedAirlines = useAppSelector(getSelectedAirlines);
+    const selectedConnections = useAppSelector(getSelectedConnections);
 
     const handleCheckboxChange = (event: React.FormEvent<HTMLInputElement>) => {
         const { value, checked } = event.currentTarget;
@@ -135,7 +134,7 @@ const FilterMenu: React.FC = () => {
             name = parseInt(name)
         }
         dispatch(updateFilterSelection({ value, name, selected: checked }))
-        dispatch(updateShownFlights())
+        dispatch(filterTickets())
         dispatch(updateSelectedOptionNames())
     };
     const toggleMenu = () => {
@@ -203,11 +202,11 @@ const FilterMenu: React.FC = () => {
                                     checked={airline.selected}
                                     onChange={handleCheckboxChange}
                                     variant={"round"}
+                                    key={index}
                                 />
                             </label>
                         ))}
                     </div>
-
                 </FieldSet>
             </Form>}
 

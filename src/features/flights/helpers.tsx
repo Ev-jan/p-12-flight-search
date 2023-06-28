@@ -192,16 +192,16 @@ export const processedTicket = (ticket: Ticket) => {
   return processedTicket
 }
 
-export const sortingFunctions = {
-  [SortCriteria.optimal]: (a: Ticket, b: Ticket) => {
-    const scoreA = calculateFlightScore(a);
-    const scoreB = calculateFlightScore(b);
-    return scoreA - scoreB;
-  },
-  [SortCriteria.cheapest]: (a: Ticket, b: Ticket) => a.price - b.price,
-  [SortCriteria.fastest]: (a: Ticket, b: Ticket) => {
-    const durationA = flightDuration(a.startTime, a.endTime);
-    const durationB = flightDuration(b.startTime, b.endTime);
-    return durationA - durationB;
-  },
-};
+// export const sortingFunctions = {
+//   [SortCriteria.optimal]: (a: Ticket, b: Ticket) => {
+//     const scoreA = calculateFlightScore(a);
+//     const scoreB = calculateFlightScore(b);
+//     return scoreA - scoreB;
+//   },
+//   [SortCriteria.cheapest]: (a: Ticket, b: Ticket) => a.price - b.price,
+//   [SortCriteria.fastest]: (a: Ticket, b: Ticket) => {
+//     const durationA = flightDuration(a.startTime, a.endTime);
+//     const durationB = flightDuration(b.startTime, b.endTime);
+//     return durationA - durationB;
+//   },
+// };

@@ -13,7 +13,7 @@ import {
 import {
   updateFilterSelections,
   updateFilterOptions,
-  sortingFunctions,
+  sortWithCurrCriteria,
 } from "./helpers";
 
 const flightsAdapter = createEntityAdapter<Ticket>({
@@ -61,11 +61,12 @@ const flightSlice = createSlice({
     updateSelectedOptionNames: (state) => {
       state.selectedFilters.airlines = state.filters.airline
         .filter((option) => option.selected)
-        .map((option) => option.value as string);
+        .map((option) => option.airline as string);
 
       state.selectedFilters.connections = state.filters.connections
-        .filter((option) => option.selected)
-        .map((option) => option.value as number);
+        .filter((option) => option.selected === true)
+        .map((option) => option.connections as number);
+
     },
     updateFilterSelection: (state, action: PayloadAction<OptionFilter>) => {
       state.filters = updateFilterSelections(state.filters, action.payload);
@@ -92,36 +93,15 @@ const flightSlice = createSlice({
     },
     sortOptimalFlights: (state: State) => {
       state.sortCriteria = SortCriteria.optimal;
-      if (state.ids.length > 0) {
-        state.ids.sort((a, b) =>
-          sortingFunctions[state.sortCriteria](
-            state.entities[a] as Ticket,
-            state.entities[b] as Ticket
-          )
-        );
-      }
+        state.filteredFlights = sortWithCurrCriteria(state.filteredFlights, state.sortCriteria)
     },
     sortCheapestFlights: (state: State) => {
       state.sortCriteria = SortCriteria.cheapest;
-      if (state.ids.length > 0) {
-        state.ids.sort((a, b) =>
-          sortingFunctions[state.sortCriteria](
-            state.entities[a] as Ticket,
-            state.entities[b] as Ticket
-          )
-        );
-      }
+        state.filteredFlights = sortWithCurrCriteria(state.filteredFlights, state.sortCriteria)
     },
     sortFastestFlights: (state: State) => {
       state.sortCriteria = SortCriteria.fastest;
-      if (state.ids.length > 0) {
-        state.ids.sort((a, b) =>
-          sortingFunctions[state.sortCriteria](
-            state.entities[a] as Ticket,
-            state.entities[b] as Ticket
-          )
-        );
-      }
+      state.filteredFlights = sortWithCurrCriteria(state.filteredFlights, state.sortCriteria)
     },
   },
 });
